@@ -1,0 +1,36 @@
+import java.io.*;
+import jakarta.servlet.*;
+import jakarta.servlet.http.*;
+import jakarta.servlet.annotation.*;
+
+@WebServlet("/LoginServlet") // URL pattern for the servlet
+public class LoginServlet extends HttpServlet {
+
+    @Override
+    protected void doPost(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+
+        // Set response type
+        response.setContentType("text/html");
+        PrintWriter out = response.getWriter();
+
+        // Retrieve form data
+        String username = request.getParameter("username");
+        String password = request.getParameter("password");
+
+        // Simple hardcoded validation (you can connect to DB later)
+        if ("admin".equals(username) && "1234".equals(password)) {
+            out.println("<html><body>");
+            out.println("<h2>Welcome, " + username + "!</h2>");
+            out.println("<p>Login successful. Have a great day!</p>");
+            out.println("</body></html>");
+        } else {
+            out.println("<html><body>");
+            out.println("<h2 style='color:red;'>Invalid username or password!</h2>");
+            out.println("<a href='login.html'>Try again</a>");
+            out.println("</body></html>");
+        }
+
+        out.close();
+    }
+}
