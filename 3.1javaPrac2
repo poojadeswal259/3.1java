@@ -1,0 +1,118 @@
+CREATE DATABASE companydb;
+
+USE companydb;
+
+CREATE TABLE Employee (
+    EmpID INT PRIMARY KEY,
+    Name VARCHAR(50),
+    Salary DECIMAL(10,2)
+);
+
+INSERT INTO Employee VALUES (101, 'Pooja Deswal', 55000);
+INSERT INTO Employee VALUES (102, 'Aman Sharma', 60000);
+INSERT INTO Employee VALUES (103, 'Riya Mehta', 52000);
+
+
+
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Employee Search</title>
+</head>
+<body>
+    <h2>Search Employee by ID</h2>
+    <form action="EmployeeServlet" method="get">
+        <label>Employee ID:</label>
+        <input type="text" name="empid">
+        <input type="submit" value="Search">
+    </form>
+
+    <br><br>
+    <form action="EmployeeServlet" method="get">
+        <input type="hidden" name="empid" value="">
+        <input type="submit" value="View All Employees">
+    </form>
+</body>
+</html>
+
+
+
+import java.io.*;
+import java.sql.*;
+import jakarta.servlet.*;
+import jakarta.servlet.http.*;
+import jakarta.servlet.annotation.*;
+
+@WebServlet("/EmployeeServlet")
+public class EmployeeServlet extends HttpServlet {
+
+    // JDBC connection parameters
+    private static final String JDBC_URL = "jdbc:mysql://localhost:3306/companydb";
+    private static final String JDBC_USER = "root";      // change if needed
+    private static final String JDBC_PASS = "12345";     // change to your MySQL password
+
+    @Override
+    protected void doGet(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+
+        response.setContentType("text/html");
+        PrintWriter out = response.getWriter();
+
+        String empIdParam = request.getParameter("empid");
+
+        out.println("<html><body>");
+        out.println("<h2>Employee Details</h2>");
+
+        try {
+            // Load MySQL JDBC Driver
+            Class.forName("com.mysql.cj.jdbc.Driver");
+
+            // Establish connection
+            Connection conn = DriverManager.getConnection(JDBC_URL, JDBC_USER, JDBC_PASS);
+
+            PreparedStatement stmt;
+            if (empIdParam != null && !empIdParam.isEmpty()) {
+                // Search by Employee ID
+                stmt = conn.prepareStatement("SELECT * FROM Employee WHERE EmpID = ?");
+                stmt.setInt(1, Integer.parseInt(empIdParam));
+            } else {
+                // Fetch all employees
+                stmt = conn.prepareStatement("SELECT * FROM Employee");
+            }
+
+            ResultSet rs = stmt.executeQuery();
+
+            // Generate HTML table
+            out.println("<table border='1' cellpadding='8'>");
+            out.println("<tr><th>EmpID</th><th>Name</th><th>Salary</th></tr>");
+
+            boolean found = false;
+            while (rs.next()) {
+                found = true;
+                out.println("<tr>");
+                out.println("<td>" + rs.getInt("EmpID") + "</td>");
+                out.println("<td>" + rs.getString("Name") + "</td>");
+                out.println("<td>" + rs.getDouble("Salary") + "</td>");
+                out.println("</tr>");
+            }
+            out.println("</table>");
+
+            if (!found) {
+                out.println("<p style='color:red;'>No employee found with the given ID.</p>");
+            }
+
+            // Close resources
+            rs.close();
+            stmt.close();
+            conn.close();
+
+        } catch (Exception e) {
+            out.println("<h3 style='color:red;'>Error: " + e.getMessage() + "</h3>");
+        }
+
+        out.println("<br><a href='employee.html'>Back to Search</a>");
+        out.println("</body></html>");
+        out.close();
+    }
+}
